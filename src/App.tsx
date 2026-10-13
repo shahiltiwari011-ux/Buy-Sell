@@ -12,7 +12,7 @@ import { SellModal } from './components/SellModal';
 import { MessagesModal } from './components/MessagesModal';
 import { NotificationToast, type ToastMessage } from './components/NotificationToast';
 import { Footer } from './components/Footer';
-import { SearchX, ArrowUpRight, Plus, Sparkles } from 'lucide-react';
+import { SearchX, ArrowUpRight } from 'lucide-react';
 
 const CATEGORIES: Category[] = [
   'All',

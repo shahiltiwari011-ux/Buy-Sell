@@ -115,6 +115,9 @@ export const SellModal: React.FC<SellModalProps> = ({
     setDescription('Clean organized lecture notes & formula sheets for first semester. Spiral-bound with practice exam solutions.');
     setImageUrl(PRESET_IMAGE_OPTIONS[0].url);
     setImageBgColor('#DCEEE2');
+    setSellerName('Maya');
+    setSellerEmail('maya.campus@edu');
+    setSellerPhone('+91 98765 43210');
     setSellerLocation('On campus');
     setErrors({});
   };
@@ -339,6 +342,45 @@ export const SellModal: React.FC<SellModalProps> = ({
                   <img src={opt.url} alt={opt.label} className="w-full h-8 object-contain" />
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Seller Contact Info */}
+          <div className="p-3.5 bg-slate-50 rounded-2xl border-2 border-black/15">
+            <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 mb-2">
+              Seller Contact (for campus pickup)
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+              <div>
+                <label className="text-[11px] text-slate-500 font-bold block mb-1">Your Name</label>
+                <input
+                  type="text"
+                  value={sellerName}
+                  onChange={(e) => setSellerName(e.target.value)}
+                  placeholder="Maya"
+                  className="w-full px-3 py-1.5 rounded-xl border-2 border-black text-xs font-medium text-slate-900 focus:outline-none focus:bg-white"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] text-slate-500 font-bold block mb-1">College Email</label>
+                <input
+                  type="email"
+                  value={sellerEmail}
+                  onChange={(e) => setSellerEmail(e.target.value)}
+                  placeholder="student@campus.edu"
+                  className="w-full px-3 py-1.5 rounded-xl border-2 border-black text-xs font-medium text-slate-900 focus:outline-none focus:bg-white"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] text-slate-500 font-bold block mb-1">WhatsApp / Phone</label>
+                <input
+                  type="tel"
+                  value={sellerPhone}
+                  onChange={(e) => setSellerPhone(e.target.value)}
+                  placeholder="+91 98765 43210"
+                  className="w-full px-3 py-1.5 rounded-xl border-2 border-black text-xs font-medium text-slate-900 focus:outline-none focus:bg-white"
+                />
+              </div>
             </div>
           </div>
 

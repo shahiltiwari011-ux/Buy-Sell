@@ -148,7 +148,9 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                   <div className="flex-1">
                     <div className="font-bold text-sm text-slate-900 flex items-center gap-1">
                       {product.sellerName}
-                      <ShieldCheck className="w-4 h-4 text-emerald-600" title="Campus verified student" />
+                      <span title="Campus verified student" className="inline-flex items-center">
+                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      </span>
                     </div>
                     <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
                       <MapPin className="w-3 h-3 text-slate-400" />

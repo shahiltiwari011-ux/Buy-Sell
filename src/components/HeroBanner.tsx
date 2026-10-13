@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Search, X } from 'lucide-react';
+import { ArrowRight, X } from 'lucide-react';
 
 interface HeroBannerProps {
   searchQuery: string;

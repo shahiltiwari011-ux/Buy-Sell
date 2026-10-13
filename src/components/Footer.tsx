@@ -1,5 +1,5 @@
 import React from 'react';
-import { RotateCcw, ShieldCheck, Heart } from 'lucide-react';
+import { RotateCcw, ShieldCheck } from 'lucide-react';
 
 interface FooterProps {
   onResetDemo: () => void;
