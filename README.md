@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🎓 campusloop — new semester. new-to-you stuff.
 
 **campusloop** is a modern, student-budget peer marketplace designed with a fresh neo-brutalist aesthetic for college classmates to buy and sell pre-loved textbooks, tech, dorm furniture, bikes, and fits.
@@ -81,6 +80,4 @@ node ./node_modules/vite/bin/vite.js --port 5173
 ```
 
 Open **`http://localhost:5173/`** in your browser.
-=======
-# Buy-Sell
->>>>>>> 42a73377ed91e872d309b654b0ad800f6c58c015
+

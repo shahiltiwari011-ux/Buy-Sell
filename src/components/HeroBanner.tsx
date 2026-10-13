@@ -5,12 +5,14 @@ interface HeroBannerProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onSubmitSearch?: () => void;
+  onExploreRoommates?: () => void;
 }
 
 export const HeroBanner: React.FC<HeroBannerProps> = ({
   searchQuery,
   onSearchChange,
-  onSubmitSearch
+  onSubmitSearch,
+  onExploreRoommates
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -38,6 +40,21 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
           <p className="text-xl sm:text-2xl font-semibold text-slate-700">
             Big finds. Student-budget energy.
           </p>
+
+          {/* Roommate Finder Discovery Chip */}
+          {onExploreRoommates && (
+            <div>
+              <button
+                id="hero-explore-roommates-btn"
+                type="button"
+                onClick={onExploreRoommates}
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#FCFBF7] hover:bg-[#E2F952] border-2 border-black rounded-full text-xs font-bold text-slate-900 transition-all cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 group"
+              >
+                <span>🏠 Moving near campus this semester?</span>
+                <span className="font-black underline group-hover:no-underline">Explore Roommate Finder ↗</span>
+              </button>
+            </div>
+          )}
 
           {/* Search Pill */}
           <div className="pt-2 max-w-lg">

@@ -16,6 +16,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onToggleSave
 }) => {
   const renderBadge = () => {
+    if (product.isSold) {
+      return (
+        <span className="bg-slate-900 text-white font-black text-[10px] sm:text-[11px] tracking-wider uppercase px-2 py-0.5 rounded-md border border-black shadow-xs">
+          SOLD
+        </span>
+      );
+    }
+
     if (product.badge) {
       if (product.badge === 'STEAL') {
         return (
@@ -71,14 +79,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           src={product.imageUrl}
           alt={product.title}
           loading="lazy"
-          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-sm"
+          className={`w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-sm ${
+            product.isSold ? 'grayscale-[60%] opacity-80' : ''
+          }`}
           onError={(e) => {
             (e.target as HTMLImageElement).src =
               'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80';
           }}
         />
 
-        {/* Top-Left Badge (STEAL / BARELY USED / MAIN CHARACTER) */}
+        {/* Top-Left Badge (STEAL / BARELY USED / MAIN CHARACTER / SOLD) */}
         <div className="absolute top-3 left-3 z-10">
           {renderBadge()}
         </div>
@@ -101,10 +111,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className="p-3.5 sm:p-4 bg-white flex flex-col justify-between flex-1 gap-2">
         {/* Row 1: Title and Price */}
         <div className="flex items-center justify-between gap-2">
-          <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-tight truncate group-hover:underline">
+          <h3 className={`font-bold text-slate-900 text-sm sm:text-base leading-tight truncate group-hover:underline ${
+            product.isSold ? 'line-through text-slate-500' : ''
+          }`}>
             {product.title}
           </h3>
-          <span className="font-black text-slate-900 text-base sm:text-lg shrink-0">
+          <span className={`font-black text-base sm:text-lg shrink-0 ${
+            product.isSold ? 'text-slate-400 line-through' : 'text-slate-900'
+          }`}>
             ₹{product.price.toLocaleString('en-IN')}
           </span>
         </div>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { LayoutGrid, Heart, Mail, ArrowUpRight } from 'lucide-react';
+import { LayoutGrid, Heart, Mail, ArrowUpRight, Users } from 'lucide-react';
+import { ProfileDropdown } from './ProfileDropdown';
 
 interface NavbarProps {
   onOpenSellModal: () => void;
@@ -9,6 +10,10 @@ interface NavbarProps {
   savedCount: number;
   unreadCount: number;
   onResetToAll: () => void;
+  currentView: 'marketplace' | 'roommates';
+  onSelectView: (view: 'marketplace' | 'roommates') => void;
+  onOpenPostRoommate?: () => void;
+  onOpenAuth: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -18,7 +23,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   isSavedViewActive,
   savedCount,
   unreadCount,
-  onResetToAll
+  onResetToAll,
+  currentView,
+  onSelectView,
+  onOpenPostRoommate,
+  onOpenAuth
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-slate-200/80 transition-all">
@@ -46,17 +55,49 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Nav links */}
             <nav className="hidden md:flex items-center gap-6 text-sm font-bold text-slate-700">
               <button
-                onClick={onResetToAll}
-                className="flex items-center gap-2 hover:text-black transition-colors cursor-pointer py-1"
+                id="nav-marketplace-btn"
+                onClick={() => {
+                  onSelectView('marketplace');
+                  onResetToAll();
+                }}
+                className={`flex items-center gap-2 transition-colors cursor-pointer py-1 ${
+                  currentView === 'marketplace' && !isSavedViewActive
+                    ? 'text-black font-extrabold underline decoration-2 underline-offset-4'
+                    : 'hover:text-black'
+                }`}
               >
                 <LayoutGrid className="w-4 h-4" />
-                <span>Browse</span>
+                <span>Marketplace</span>
               </button>
 
               <button
-                onClick={onToggleSavedView}
+                id="nav-roommates-btn"
+                onClick={() => onSelectView('roommates')}
                 className={`flex items-center gap-2 transition-colors cursor-pointer py-1 relative ${
-                  isSavedViewActive ? 'text-black font-extrabold underline decoration-2 underline-offset-4' : 'hover:text-black'
+                  currentView === 'roommates'
+                    ? 'text-black font-extrabold underline decoration-2 underline-offset-4'
+                    : 'hover:text-black'
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                <span>Find Roommate</span>
+                <span className="bg-[#E2F952] text-black text-[10px] font-black px-1.5 py-0.2 rounded-md border border-black/20 shadow-2xs rotate-[-2deg]">
+                  NEW
+                </span>
+              </button>
+
+              <button
+                id="nav-saved-btn"
+                onClick={() => {
+                  if (currentView !== 'marketplace') {
+                    onSelectView('marketplace');
+                  }
+                  onToggleSavedView();
+                }}
+                className={`flex items-center gap-2 transition-colors cursor-pointer py-1 relative ${
+                  isSavedViewActive && currentView === 'marketplace'
+                    ? 'text-black font-extrabold underline decoration-2 underline-offset-4'
+                    : 'hover:text-black'
                 }`}
               >
                 <Heart className={`w-4 h-4 ${savedCount > 0 ? 'text-rose-500 fill-rose-500' : ''}`} />
@@ -89,7 +130,23 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Mobile quick icons */}
             <div className="flex md:hidden items-center gap-2">
               <button
-                onClick={onToggleSavedView}
+                id="mobile-nav-roommates-btn"
+                onClick={() => onSelectView(currentView === 'roommates' ? 'marketplace' : 'roommates')}
+                className={`p-2 rounded-xl border border-black/10 flex items-center gap-1 ${
+                  currentView === 'roommates' ? 'bg-[#E2F952]' : 'bg-slate-50'
+                }`}
+                title="Toggle Roommates / Marketplace"
+              >
+                <Users className="w-4 h-4" />
+                <span className="text-[10px] font-black uppercase">
+                  {currentView === 'roommates' ? 'Mkt' : 'Room'}
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  if (currentView !== 'marketplace') onSelectView('marketplace');
+                  onToggleSavedView();
+                }}
                 className={`p-2 rounded-xl border border-black/10 ${isSavedViewActive ? 'bg-[#E2F952]' : 'bg-slate-50'}`}
                 title="Saved Items"
               >
@@ -107,26 +164,29 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             </div>
 
-            {/* Prominent "Sell your stuff ↗" Button */}
-            <button
-              onClick={onOpenSellModal}
-              id="sell-your-stuff-btn"
-              className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2.5 rounded-2xl font-black text-xs sm:text-sm text-black bg-[#E2F952] hover:bg-[#d5ee40] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
-            >
-              <span>Sell your stuff</span>
-              <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
-            </button>
+            {/* Action Button */}
+            {currentView === 'roommates' ? (
+              <button
+                onClick={onOpenPostRoommate || onOpenSellModal}
+                id="post-roommate-btn"
+                className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2.5 rounded-2xl font-black text-xs sm:text-sm text-black bg-[#E2F952] hover:bg-[#d5ee40] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
+              >
+                <span>Post Availability</span>
+                <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+              </button>
+            ) : (
+              <button
+                onClick={onOpenSellModal}
+                id="sell-your-stuff-btn"
+                className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2.5 rounded-2xl font-black text-xs sm:text-sm text-black bg-[#E2F952] hover:bg-[#d5ee40] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
+              >
+                <span>Sell your stuff</span>
+                <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+              </button>
+            )}
 
-            {/* User Profile Avatar with yellow ring */}
-            <div className="relative group cursor-pointer" title="Signed in as Student">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-[#E2F952] ring-2 ring-black overflow-hidden bg-amber-100 flex items-center justify-center">
-                <img
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80"
-                  alt="Student Profile"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
+            {/* User Profile Avatar with dropdown */}
+            <ProfileDropdown onOpenAuth={onOpenAuth} />
 
           </div>
 

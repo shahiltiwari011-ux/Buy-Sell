@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import { CheckCircle2, Info, X } from 'lucide-react';
+import { CheckCircle2, Info, AlertCircle, X } from 'lucide-react';
 
 export interface ToastMessage {
   id: string;
-  type: 'success' | 'info';
+  type: 'success' | 'info' | 'error';
   message: string;
 }
 
@@ -28,6 +28,8 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({ toast, onD
       <div className="flex items-center gap-3 px-4 py-3 bg-slate-900 text-white rounded-2xl shadow-2xl border border-slate-800">
         {toast.type === 'success' ? (
           <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+        ) : toast.type === 'error' ? (
+          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
         ) : (
           <Info className="w-5 h-5 text-indigo-400 shrink-0" />
         )}
