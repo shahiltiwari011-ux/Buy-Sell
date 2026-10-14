@@ -1,8 +1,14 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-// Read environment variables (Vite exposes VITE_ prefixed vars)
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Default Supabase project credentials for production deployment
+// (Supabase anon keys are public client-side keys protected by PostgreSQL Row Level Security)
+const DEFAULT_SUPABASE_URL = 'https://uvtuvblmtrfnlcxmgxzr.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2dHV2YmxtdHJmbmxjeG1neHpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4OTkxNTIsImV4cCI6MjEwNzQ3NTE1Mn0.EqRCL-KjxDZdOg-lYLVHsvPtEOT4TO33H_Ba42Btj1k';
+
+// Read environment variables with fallback to default project credentials
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
 
 let supabase: SupabaseClient | null = null;
 
