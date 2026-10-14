@@ -291,4 +291,15 @@ export const marketplaceService = {
       return { url: null, error: (err as Error).message };
     }
   },
+
+  /** Reset local marketplace data to initial demo catalog */
+  resetDemoData: (): Product[] => {
+    try {
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(INITIAL_PRODUCTS));
+    } catch (err) {
+      console.error('[Marketplace] Failed to reset demo products:', err);
+    }
+    return INITIAL_PRODUCTS;
+  },
 };
+

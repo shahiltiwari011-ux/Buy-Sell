@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { 
   RoommateListing, 
   RoommateTab, 
   RoommateFiltersState 
 } from '../../types';
 import { roommateService } from '../../services/roommateService';
+import { useAuth } from '../../services/authService';
 import { RoommateCard } from './RoommateCard';
 import { PostAvailabilityForm } from './PostAvailabilityForm';
 import { ContactRoommateModal } from './ContactRoommateModal';
@@ -28,6 +29,7 @@ import {
 interface RoommateFinderSectionProps {
   onDirectMessage: (name: string, college: string, text: string) => void;
   onShowToast: (message: string, type?: 'success' | 'info' | 'error') => void;
+  onOpenAuth: () => void;
 }
 
 const INITIAL_FILTERS: RoommateFiltersState = {
@@ -42,8 +44,10 @@ const INITIAL_FILTERS: RoommateFiltersState = {
 
 export const RoommateFinderSection: React.FC<RoommateFinderSectionProps> = ({
   onDirectMessage,
-  onShowToast
+  onShowToast,
+  onOpenAuth
 }) => {
+  const { user, isAuthenticated } = useAuth();
   // Tab State
   const [activeTab, setActiveTab] = useState<RoommateTab>('find-roommate');
 
@@ -68,24 +72,25 @@ export const RoommateFinderSection: React.FC<RoommateFinderSectionProps> = ({
   const isDemo = roommateService.isDemoMode();
 
   // Load initial listings & blocked users
-  const loadListings = async () => {
+  const loadListings = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const data = await roommateService.getListings();
+      const data = await roommateService.getListings(undefined, user?.id);
       setListings(data);
-      setBlockedUserIds(roommateService.getBlockedUserIds());
+      const blocks = await roommateService.getBlockedUserIds(user?.id);
+      setBlockedUserIds(blocks);
     } catch (err: unknown) {
       console.error('Error fetching roommate listings:', err);
       setErrorMessage('Could not load roommate listings. Please check your connection and retry.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user?.id]);
 
   useEffect(() => {
     loadListings();
-  }, []);
+  }, [loadListings]);
 
   // Filter listings based on active tab and filter state
   const filteredListings = useMemo(() => {
@@ -191,14 +196,14 @@ export const RoommateFinderSection: React.FC<RoommateFinderSectionProps> = ({
   ) => {
     try {
       if (editingListing) {
-        const updated = await roommateService.updateListing(editingListing.id, listingData);
+        const updated = await roommateService.updateListing(editingListing.id, listingData, user?.id);
         setListings((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
         setEditingListing(null);
         onShowToast(`Listing for ${updated.name} updated successfully!`, 'success');
         // Switch to the relevant tab
         setActiveTab(updated.listingType === 'roommate' ? 'find-roommate' : 'find-room');
       } else {
-        const created = await roommateService.createListing(listingData);
+        const created = await roommateService.createListing(listingData, user?.id);
         setListings((prev) => [created, ...prev]);
         onShowToast(`🎉 Your listing is live on CampusLoop!`, 'success');
         // Switch to the relevant tab
@@ -214,7 +219,7 @@ export const RoommateFinderSection: React.FC<RoommateFinderSectionProps> = ({
   const handleConfirmDelete = async () => {
     if (!deletingListing) return;
     try {
-      await roommateService.deleteListing(deletingListing.id);
+      await roommateService.deleteListing(deletingListing.id, user?.id);
       setListings((prev) => prev.filter((item) => item.id !== deletingListing.id));
       onShowToast('Listing deleted successfully.', 'info');
     } catch (err: unknown) {
@@ -240,7 +245,7 @@ export const RoommateFinderSection: React.FC<RoommateFinderSectionProps> = ({
         listingName: listing.name,
         reason,
         details
-      });
+      }, user?.id);
       onShowToast(`Listing for ${listing.name} reported. Thank you for keeping campus safe.`, 'info');
     } catch (err) {
       console.error('Error reporting listing:', err);
@@ -249,9 +254,9 @@ export const RoommateFinderSection: React.FC<RoommateFinderSectionProps> = ({
   };
 
   // Handler for Blocking User
-  const handleConfirmBlock = async (userId: string, userName: string) => {
+  const handleConfirmBlock = async (blockedUserId: string, userName: string) => {
     try {
-      const updated = await roommateService.blockUser(userId);
+      const updated = await roommateService.blockUser(blockedUserId, user?.id);
       setBlockedUserIds(updated);
       onShowToast(`${userName} has been blocked. Their listings are now hidden.`, 'info');
     } catch (err) {
@@ -260,9 +265,9 @@ export const RoommateFinderSection: React.FC<RoommateFinderSectionProps> = ({
     }
   };
 
-  const handleUnblockUser = async (userId: string) => {
+  const handleUnblockUser = async (blockedUserId: string) => {
     try {
-      const updated = await roommateService.unblockUser(userId);
+      const updated = await roommateService.unblockUser(blockedUserId, user?.id);
       setBlockedUserIds(updated);
       onShowToast('User unblocked.', 'info');
     } catch (err) {
@@ -303,6 +308,11 @@ export const RoommateFinderSection: React.FC<RoommateFinderSectionProps> = ({
               <button
                 id="btn-post-availability-header"
                 onClick={() => {
+                  if (!isDemo && !isAuthenticated) {
+                    onShowToast('Please sign in to post a listing.', 'info');
+                    onOpenAuth();
+                    return;
+                  }
                   setEditingListing(null);
                   setActiveTab('post-availability');
                 }}
@@ -411,6 +421,11 @@ export const RoommateFinderSection: React.FC<RoommateFinderSectionProps> = ({
         <button
           id="tab-post-availability"
           onClick={() => {
+            if (!isDemo && !isAuthenticated) {
+              onShowToast('Please sign in to post a listing.', 'info');
+              onOpenAuth();
+              return;
+            }
             setEditingListing(null);
             setActiveTab('post-availability');
           }}
@@ -672,7 +687,7 @@ export const RoommateFinderSection: React.FC<RoommateFinderSectionProps> = ({
                 <RoommateCard
                   key={listing.id}
                   listing={listing}
-                  isOwner={listing.userId === roommateService.getCurrentUserId() || Boolean(listing.isUserCreated)}
+                  isOwner={listing.userId === user?.id || Boolean(listing.isUserCreated)}
                   onContact={(l) => setContactingListing(l)}
                   onEdit={(l) => {
                     setEditingListing(l);

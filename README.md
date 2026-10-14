@@ -69,15 +69,53 @@
 
 ---
 
-## 🚀 Running the Project
+## 🗄️ Database & Production Setup (Supabase)
+
+CampusLoop runs in **Hybrid Mode**:
+- **Offline / Demo Mode**: Zero configuration needed. The app runs immediately with rich demo products, mock chats, and roommate listings saved to browser storage.
+- **Production Mode**: Connect your Supabase project to enable real multi-user persistence, PostgreSQL RLS security, and cloud storage.
+
+### 1. Configure Supabase Environment Variables
+
+Copy `.env.example` to `.env`:
 
 ```bash
-# 1. Start the Vite development server:
-npm run dev
-
-# Or directly:
-node ./node_modules/vite/bin/vite.js --port 5173
+cp .env.example .env
 ```
 
-Open **`http://localhost:5173/`** in your browser.
+Fill in your project credentials in `.env`:
+
+```env
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key-here
+```
+
+### 2. Apply Database Schema
+
+Open the Supabase SQL Editor and run the script found in [supabase/seed.sql](file:///c:/Users/ABHI/Desktop/Buy&Sell/supabase/seed.sql). This provisions:
+- `marketplace_products` & `marketplace_reports` (with RLS policies)
+- `roommate_listings`, `roommate_blocks`, & `roommate_reports` (with RLS policies)
+- `profiles` table automatically linked to `auth.users` via trigger
+- `campusloop_media` storage bucket for product and room images
+
+---
+
+## 🚀 Running & Building for Production
+
+### Development Server:
+```bash
+npm run dev
+```
+
+### Production Build:
+```bash
+npm run build
+```
+Creates an optimized, chunked production bundle in `dist/` with separate vendor caches for React, Lucide Icons, and Supabase.
+
+### Preview Production Build:
+```bash
+npm run preview
+```
+
 

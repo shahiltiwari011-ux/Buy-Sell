@@ -243,8 +243,23 @@ export function App() {
     }
   };
 
+  const handleOpenSellModal = () => {
+    if (marketplaceService.isConfiguredWithSupabase() && !user) {
+      setToast({
+        id: String(Date.now()),
+        type: 'info',
+        message: 'Please sign in to drop an item.'
+      });
+      setAuthView('sign-in');
+      setIsAuthOpen(true);
+      return;
+    }
+    setIsSellOpen(true);
+  };
+
   const handleResetDemoData = () => {
-    const reset = storageService.resetToDemo();
+    const reset = marketplaceService.resetDemoData();
+    storageService.resetDemoThreadsAndSaved();
     setProducts(reset);
     setSavedProductIds(storageService.getSavedIds());
     setThreads(storageService.getThreads());
@@ -254,7 +269,7 @@ export function App() {
     setToast({
       id: String(Date.now()),
       type: 'info',
-      message: 'Reset to original 8 campus drops!'
+      message: 'Reset to original campus drops & demo threads!'
     });
   };
 
@@ -318,7 +333,7 @@ export function App() {
       
       {/* 1. Header / Navbar */}
       <Navbar
-        onOpenSellModal={() => setIsSellOpen(true)}
+        onOpenSellModal={handleOpenSellModal}
         onOpenMessages={() => setIsMessagesOpen(true)}
         onToggleSavedView={() => setIsSavedViewActive(prev => !prev)}
         isSavedViewActive={isSavedViewActive}
@@ -436,7 +451,7 @@ export function App() {
                     Clear Filters
                   </button>
                   <button
-                    onClick={() => setIsSellOpen(true)}
+                    onClick={handleOpenSellModal}
                     className="px-4 py-2 rounded-xl text-sm font-black bg-[#E2F952] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
                   >
                     Sell an Item
@@ -456,6 +471,10 @@ export function App() {
           <RoommateFinderSection
             onDirectMessage={handleDirectRoommateMessage}
             onShowToast={handleShowToast}
+            onOpenAuth={() => {
+              setAuthView('sign-in');
+              setIsAuthOpen(true);
+            }}
           />
         </>
       )}
@@ -463,7 +482,7 @@ export function App() {
       {/* 6. Footer with centered "good stuff deserves a second semester." */}
       <Footer
         onResetDemo={handleResetDemoData}
-        onOpenSellModal={() => setIsSellOpen(true)}
+        onOpenSellModal={handleOpenSellModal}
       />
 
       {/* Modals & Drawers */}

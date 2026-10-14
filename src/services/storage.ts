@@ -1,72 +1,13 @@
 import type { Product, MessageThread } from '../types';
-import { INITIAL_PRODUCTS, INITIAL_THREADS } from '../data/initialProducts';
+import { INITIAL_THREADS } from '../data/initialProducts';
 
-const PRODUCTS_KEY = 'campusloop_products_v3';
 const SAVED_KEY = 'campusloop_saved_v3';
 const THREADS_KEY = 'campusloop_threads_v3';
 
 export const storageService = {
-  getProducts: (): Product[] => {
-    try {
-      const stored = localStorage.getItem(PRODUCTS_KEY);
-      if (!stored) {
-        localStorage.setItem(PRODUCTS_KEY, JSON.stringify(INITIAL_PRODUCTS));
-        return INITIAL_PRODUCTS;
-      }
-      const parsed = JSON.parse(stored);
-      if (!Array.isArray(parsed) || parsed.length === 0) {
-        localStorage.setItem(PRODUCTS_KEY, JSON.stringify(INITIAL_PRODUCTS));
-        return INITIAL_PRODUCTS;
-      }
-      return parsed;
-    } catch (err) {
-      console.error('Failed to read products from localStorage:', err);
-      return INITIAL_PRODUCTS;
-    }
-  },
-
-  addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'isUserCreated'>): Product => {
-    const current = storageService.getProducts();
-    const newProduct: Product = {
-      ...product,
-      id: `drop-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      isUserCreated: true
-    };
-    
-    // Put new product at the beginning of the list
-    const updated = [newProduct, ...current];
-    try {
-      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(updated));
-    } catch (err) {
-      console.error('Failed to save product to localStorage:', err);
-    }
-    return newProduct;
-  },
-
-  deleteProduct: (id: string): Product[] => {
-    const current = storageService.getProducts();
-    const updated = current.filter(p => p.id !== id);
-    try {
-      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(updated));
-    } catch (err) {
-      console.error('Failed to update localStorage:', err);
-    }
-    return updated;
-  },
-
-  resetToDemo: (): Product[] => {
-    try {
-      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(INITIAL_PRODUCTS));
-      localStorage.setItem(SAVED_KEY, JSON.stringify(['prod-1', 'prod-7']));
-      localStorage.setItem(THREADS_KEY, JSON.stringify(INITIAL_THREADS));
-    } catch (err) {
-      console.error('Failed to reset demo data:', err);
-    }
-    return INITIAL_PRODUCTS;
-  },
-
-  // Saved / Favorited items
+  // --------------------------------------------------------------------------
+  // Saved / Favorited items (browser wishlist)
+  // --------------------------------------------------------------------------
   getSavedIds: (): string[] => {
     try {
       const stored = localStorage.getItem(SAVED_KEY);
@@ -97,7 +38,9 @@ export const storageService = {
     }
   },
 
+  // --------------------------------------------------------------------------
   // Messages threads
+  // --------------------------------------------------------------------------
   getThreads: (): MessageThread[] => {
     try {
       const stored = localStorage.getItem(THREADS_KEY);
@@ -181,6 +124,15 @@ export const storageService = {
     } catch (err) {
       console.error('Failed to start thread:', err);
       return { threads: INITIAL_THREADS, activeThreadId: INITIAL_THREADS[0].id };
+    }
+  },
+
+  resetDemoThreadsAndSaved: () => {
+    try {
+      localStorage.setItem(SAVED_KEY, JSON.stringify(['prod-1', 'prod-7']));
+      localStorage.setItem(THREADS_KEY, JSON.stringify(INITIAL_THREADS));
+    } catch (err) {
+      console.error('Failed to reset demo threads & saved:', err);
     }
   }
 };

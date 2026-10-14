@@ -6,9 +6,31 @@ const STORAGE_KEY_LISTINGS = 'campusloop_roommate_listings_v1';
 const STORAGE_KEY_BLOCKS = 'campusloop_roommate_blocks_v1';
 const STORAGE_KEY_REPORTS = 'campusloop_roommate_reports_v1';
 
-// Current logged in demo student user identity
-export const CURRENT_STUDENT_USER_ID = 'current-student-user';
-export const CURRENT_STUDENT_NAME = 'You (Student)';
+/** Maps a Supabase row to a RoommateListing */
+function mapRow(row: Record<string, unknown>, currentUserId?: string): RoommateListing {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    listingType: row.listing_type as 'roommate' | 'room',
+    name: row.name as string,
+    avatar: (row.avatar as string) || '',
+    college: row.college as string,
+    location: row.location as string,
+    budget: Number(row.budget),
+    moveInDate: row.move_in_date as string,
+    roomType: row.room_type as RoommateListing['roomType'],
+    genderPreference: row.gender_preference as RoommateListing['genderPreference'],
+    lifestyleTags: (row.lifestyle_tags as string[]) || [],
+    cleanliness: (row.cleanliness as RoommateListing['cleanliness']) || 'Moderate',
+    sleepSchedule: (row.sleep_schedule as RoommateListing['sleepSchedule']) || 'Flexible',
+    bio: row.bio as string,
+    amenities: (row.amenities as string[]) || [],
+    roomImages: (row.room_images as string[]) || [],
+    contactEmail: row.contact_email as string,
+    createdAt: row.created_at as string,
+    isUserCreated: currentUserId ? row.user_id === currentUserId : false,
+  };
+}
 
 export const roommateService = {
   isConfiguredWithSupabase: (): boolean => {
@@ -19,14 +41,10 @@ export const roommateService = {
     return !Boolean(supabase);
   },
 
-  getCurrentUserId: (): string => {
-    return CURRENT_STUDENT_USER_ID;
-  },
-
   // --------------------------------------------------------------------------
   // LISTINGS
   // --------------------------------------------------------------------------
-  getListings: async (type?: 'roommate' | 'room'): Promise<RoommateListing[]> => {
+  getListings: async (type?: 'roommate' | 'room', currentUserId?: string): Promise<RoommateListing[]> => {
     // If Supabase is connected, query the remote PostgreSQL table
     if (supabase) {
       try {
@@ -37,35 +55,15 @@ export const roommateService = {
         const { data, error } = await query;
         if (error) throw error;
         if (data && data.length > 0) {
-          return data.map((row) => ({
-            id: row.id,
-            userId: row.user_id,
-            listingType: row.listing_type,
-            name: row.name,
-            avatar: row.avatar,
-            college: row.college,
-            location: row.location,
-            budget: Number(row.budget),
-            moveInDate: row.move_in_date,
-            roomType: row.room_type,
-            genderPreference: row.gender_preference,
-            lifestyleTags: row.lifestyle_tags || [],
-            cleanliness: row.cleanliness,
-            sleepSchedule: row.sleep_schedule,
-            bio: row.bio,
-            amenities: row.amenities || [],
-            roomImages: row.room_images || [],
-            contactEmail: row.contact_email,
-            createdAt: row.created_at,
-            isUserCreated: row.user_id === CURRENT_STUDENT_USER_ID
-          }));
+          return data.map((row) => mapRow(row, currentUserId));
         }
+        // If database is empty, fall through to localStorage for initial data
       } catch (err) {
-        console.warn('Supabase query failed, falling back to local storage:', err);
+        console.warn('[Roommate] Supabase query failed, falling back to local storage:', err);
       }
     }
 
-    // LocalStorage fallback (clearly labeled Demo Mode)
+    // LocalStorage fallback (Demo Mode)
     try {
       const stored = localStorage.getItem(STORAGE_KEY_LISTINGS);
       let listings: RoommateListing[];
@@ -85,29 +83,22 @@ export const roommateService = {
       }
       return listings;
     } catch (err) {
-      console.error('Failed reading roommate listings from local storage:', err);
+      console.error('[Roommate] Failed reading listings from local storage:', err);
       return INITIAL_ROOMMATES;
     }
   },
 
   createListing: async (
-    data: Omit<RoommateListing, 'id' | 'createdAt' | 'isUserCreated' | 'userId'>
+    data: Omit<RoommateListing, 'id' | 'createdAt' | 'isUserCreated' | 'userId'>,
+    userId?: string
   ): Promise<RoommateListing> => {
-    const newId = `listing-${Date.now()}`;
-    const newListing: RoommateListing = {
-      ...data,
-      id: newId,
-      userId: CURRENT_STUDENT_USER_ID,
-      createdAt: new Date().toISOString(),
-      isUserCreated: true
-    };
-
-    if (supabase) {
+    // Supabase path (production)
+    if (supabase && userId) {
       try {
         const { data: inserted, error } = await supabase
           .from('roommate_listings')
           .insert({
-            user_id: CURRENT_STUDENT_USER_ID,
+            user_id: userId,
             listing_type: data.listingType,
             name: data.name,
             avatar: data.avatar,
@@ -123,26 +114,41 @@ export const roommateService = {
             bio: data.bio,
             amenities: data.amenities,
             room_images: data.roomImages || [],
-            contact_email: data.contactEmail
+            contact_email: data.contactEmail,
           })
           .select()
           .single();
 
         if (!error && inserted) {
-          newListing.id = inserted.id;
+          return mapRow(inserted, userId);
+        }
+        if (error) {
+          console.warn('[Roommate] Supabase insert failed:', error.message);
+          throw new Error(error.message);
         }
       } catch (err) {
-        console.warn('Supabase insert failed, saving locally:', err);
+        // Re-throw to let caller handle
+        throw err;
       }
     }
 
-    // Always update local storage for demo mode persistence
-    const current = await roommateService.getListings();
-    const updated = [newListing, ...current];
+    // LocalStorage fallback (demo mode)
+    const demoUserId = 'demo-user';
+    const newListing: RoommateListing = {
+      ...data,
+      id: `listing-${Date.now()}`,
+      userId: userId || demoUserId,
+      createdAt: new Date().toISOString(),
+      isUserCreated: true,
+    };
+
     try {
+      const stored = localStorage.getItem(STORAGE_KEY_LISTINGS);
+      const current: RoommateListing[] = stored ? JSON.parse(stored) : INITIAL_ROOMMATES;
+      const updated = [newListing, ...current];
       localStorage.setItem(STORAGE_KEY_LISTINGS, JSON.stringify(updated));
     } catch (err) {
-      console.error('Failed saving to localStorage:', err);
+      console.error('[Roommate] Failed saving to localStorage:', err);
     }
 
     return newListing;
@@ -150,43 +156,53 @@ export const roommateService = {
 
   updateListing: async (
     id: string,
-    updates: Partial<Omit<RoommateListing, 'id' | 'createdAt' | 'userId' | 'isUserCreated'>>
+    updates: Partial<Omit<RoommateListing, 'id' | 'createdAt' | 'userId' | 'isUserCreated'>>,
+    userId?: string
   ): Promise<RoommateListing> => {
-    if (supabase) {
+    // Supabase path (production)
+    if (supabase && userId) {
       try {
-        await supabase
+        const updatePayload: Record<string, unknown> = {};
+        if (updates.listingType !== undefined) updatePayload.listing_type = updates.listingType;
+        if (updates.name !== undefined) updatePayload.name = updates.name;
+        if (updates.avatar !== undefined) updatePayload.avatar = updates.avatar;
+        if (updates.college !== undefined) updatePayload.college = updates.college;
+        if (updates.location !== undefined) updatePayload.location = updates.location;
+        if (updates.budget !== undefined) updatePayload.budget = updates.budget;
+        if (updates.moveInDate !== undefined) updatePayload.move_in_date = updates.moveInDate;
+        if (updates.roomType !== undefined) updatePayload.room_type = updates.roomType;
+        if (updates.genderPreference !== undefined) updatePayload.gender_preference = updates.genderPreference;
+        if (updates.lifestyleTags !== undefined) updatePayload.lifestyle_tags = updates.lifestyleTags;
+        if (updates.cleanliness !== undefined) updatePayload.cleanliness = updates.cleanliness;
+        if (updates.sleepSchedule !== undefined) updatePayload.sleep_schedule = updates.sleepSchedule;
+        if (updates.bio !== undefined) updatePayload.bio = updates.bio;
+        if (updates.amenities !== undefined) updatePayload.amenities = updates.amenities;
+        if (updates.roomImages !== undefined) updatePayload.room_images = updates.roomImages;
+        if (updates.contactEmail !== undefined) updatePayload.contact_email = updates.contactEmail;
+
+        const { data, error } = await supabase
           .from('roommate_listings')
-          .update({
-            ...(updates.listingType && { listing_type: updates.listingType }),
-            ...(updates.name && { name: updates.name }),
-            ...(updates.avatar && { avatar: updates.avatar }),
-            ...(updates.college && { college: updates.college }),
-            ...(updates.location && { location: updates.location }),
-            ...(updates.budget !== undefined && { budget: updates.budget }),
-            ...(updates.moveInDate && { move_in_date: updates.moveInDate }),
-            ...(updates.roomType && { room_type: updates.roomType }),
-            ...(updates.genderPreference && { gender_preference: updates.genderPreference }),
-            ...(updates.lifestyleTags && { lifestyle_tags: updates.lifestyleTags }),
-            ...(updates.cleanliness && { cleanliness: updates.cleanliness }),
-            ...(updates.sleepSchedule && { sleep_schedule: updates.sleepSchedule }),
-            ...(updates.bio && { bio: updates.bio }),
-            ...(updates.amenities && { amenities: updates.amenities }),
-            ...(updates.roomImages && { room_images: updates.roomImages }),
-            ...(updates.contactEmail && { contact_email: updates.contactEmail })
-          })
+          .update(updatePayload)
           .eq('id', id)
-          .eq('user_id', CURRENT_STUDENT_USER_ID); // Enforce owner check
+          .eq('user_id', userId) // RLS + client-side owner check
+          .select()
+          .single();
+
+        if (error) throw new Error(error.message);
+        if (data) return mapRow(data, userId);
       } catch (err) {
-        console.warn('Supabase update failed:', err);
+        throw err;
       }
     }
 
-    const current = await roommateService.getListings();
+    // LocalStorage fallback (demo mode)
+    const stored = localStorage.getItem(STORAGE_KEY_LISTINGS);
+    const current: RoommateListing[] = stored ? JSON.parse(stored) : [];
     let updatedItem: RoommateListing | null = null;
+
     const updated = current.map((item) => {
       if (item.id === id) {
-        // Enforce that only the creator can edit their listing
-        if (item.userId !== CURRENT_STUDENT_USER_ID && !item.isUserCreated) {
+        if (!item.isUserCreated && item.userId !== (userId || 'demo-user')) {
           throw new Error('Permission denied: You can only edit your own listings.');
         }
         updatedItem = { ...item, ...updates };
@@ -202,29 +218,33 @@ export const roommateService = {
     try {
       localStorage.setItem(STORAGE_KEY_LISTINGS, JSON.stringify(updated));
     } catch (err) {
-      console.error('Failed updating in localStorage:', err);
+      console.error('[Roommate] Failed updating in localStorage:', err);
     }
 
     return updatedItem;
   },
 
-  deleteListing: async (id: string): Promise<void> => {
-    if (supabase) {
+  deleteListing: async (id: string, userId?: string): Promise<void> => {
+    // Supabase path (production)
+    if (supabase && userId) {
       try {
-        await supabase
+        const { error } = await supabase
           .from('roommate_listings')
           .delete()
           .eq('id', id)
-          .eq('user_id', CURRENT_STUDENT_USER_ID); // Enforce owner check
+          .eq('user_id', userId); // RLS + client-side owner check
+        if (error) throw new Error(error.message);
+        return;
       } catch (err) {
-        console.warn('Supabase delete failed:', err);
+        throw err;
       }
     }
 
-    const current = await roommateService.getListings();
-    // Verify ownership before deleting
+    // LocalStorage fallback (demo mode)
+    const stored = localStorage.getItem(STORAGE_KEY_LISTINGS);
+    const current: RoommateListing[] = stored ? JSON.parse(stored) : [];
     const target = current.find((item) => item.id === id);
-    if (target && target.userId !== CURRENT_STUDENT_USER_ID && !target.isUserCreated) {
+    if (target && !target.isUserCreated) {
       throw new Error('Permission denied: You can only delete your own listings.');
     }
 
@@ -232,7 +252,7 @@ export const roommateService = {
     try {
       localStorage.setItem(STORAGE_KEY_LISTINGS, JSON.stringify(filtered));
     } catch (err) {
-      console.error('Failed deleting from localStorage:', err);
+      console.error('[Roommate] Failed deleting from localStorage:', err);
     }
   },
 
@@ -242,7 +262,7 @@ export const roommateService = {
       localStorage.removeItem(STORAGE_KEY_BLOCKS);
       localStorage.removeItem(STORAGE_KEY_REPORTS);
     } catch (err) {
-      console.error('Failed resetting roommate demo data:', err);
+      console.error('[Roommate] Failed resetting demo data:', err);
     }
     return INITIAL_ROOMMATES;
   },
@@ -250,7 +270,22 @@ export const roommateService = {
   // --------------------------------------------------------------------------
   // USER SAFETY: BLOCKED USERS
   // --------------------------------------------------------------------------
-  getBlockedUserIds: (): string[] => {
+  getBlockedUserIds: async (userId?: string): Promise<string[]> => {
+    // Supabase path: query the roommate_blocks table
+    if (supabase && userId) {
+      try {
+        const { data, error } = await supabase
+          .from('roommate_blocks')
+          .select('blocked_user_id')
+          .eq('user_id', userId);
+        if (error) throw error;
+        return (data || []).map((row) => row.blocked_user_id as string);
+      } catch (err) {
+        console.warn('[Roommate] Failed fetching blocks from Supabase:', err);
+      }
+    }
+
+    // LocalStorage fallback
     try {
       const stored = localStorage.getItem(STORAGE_KEY_BLOCKS);
       return stored ? JSON.parse(stored) : [];
@@ -259,73 +294,102 @@ export const roommateService = {
     }
   },
 
-  blockUser: async (userId: string): Promise<string[]> => {
-    const current = roommateService.getBlockedUserIds();
-    if (!current.includes(userId)) {
-      const updated = [...current, userId];
+  blockUser: async (blockedUserId: string, userId?: string): Promise<string[]> => {
+    // Supabase path
+    if (supabase && userId) {
       try {
-        localStorage.setItem(STORAGE_KEY_BLOCKS, JSON.stringify(updated));
+        await supabase.from('roommate_blocks').insert({
+          user_id: userId,
+          blocked_user_id: blockedUserId,
+        });
+        return roommateService.getBlockedUserIds(userId);
       } catch (err) {
-        console.error('Failed saving blocked user:', err);
+        console.warn('[Roommate] Supabase block failed:', err);
       }
-      return updated;
     }
-    return current;
+
+    // LocalStorage fallback
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_BLOCKS);
+      const current: string[] = stored ? JSON.parse(stored) : [];
+      if (!current.includes(blockedUserId)) {
+        const updated = [...current, blockedUserId];
+        localStorage.setItem(STORAGE_KEY_BLOCKS, JSON.stringify(updated));
+        return updated;
+      }
+      return current;
+    } catch (err) {
+      console.error('[Roommate] Failed saving blocked user:', err);
+      return [];
+    }
   },
 
-  unblockUser: async (userId: string): Promise<string[]> => {
-    const current = roommateService.getBlockedUserIds();
-    const updated = current.filter((id) => id !== userId);
-    try {
-      localStorage.setItem(STORAGE_KEY_BLOCKS, JSON.stringify(updated));
-    } catch (err) {
-      console.error('Failed unblocking user:', err);
+  unblockUser: async (blockedUserId: string, userId?: string): Promise<string[]> => {
+    // Supabase path
+    if (supabase && userId) {
+      try {
+        await supabase
+          .from('roommate_blocks')
+          .delete()
+          .eq('user_id', userId)
+          .eq('blocked_user_id', blockedUserId);
+        return roommateService.getBlockedUserIds(userId);
+      } catch (err) {
+        console.warn('[Roommate] Supabase unblock failed:', err);
+      }
     }
-    return updated;
+
+    // LocalStorage fallback
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_BLOCKS);
+      const current: string[] = stored ? JSON.parse(stored) : [];
+      const updated = current.filter((id) => id !== blockedUserId);
+      localStorage.setItem(STORAGE_KEY_BLOCKS, JSON.stringify(updated));
+      return updated;
+    } catch (err) {
+      console.error('[Roommate] Failed unblocking user:', err);
+      return [];
+    }
   },
 
   // --------------------------------------------------------------------------
   // USER SAFETY: REPORTING
   // --------------------------------------------------------------------------
-  getReports: (): RoommateReport[] => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY_REPORTS);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  },
-
   reportListing: async (
-    reportData: Omit<RoommateReport, 'id' | 'createdAt'>
+    reportData: Omit<RoommateReport, 'id' | 'createdAt'>,
+    reporterId?: string
   ): Promise<RoommateReport> => {
     const newReport: RoommateReport = {
       ...reportData,
       id: `report-${Date.now()}`,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
-    if (supabase) {
+    // Supabase path
+    if (supabase && reporterId) {
       try {
         await supabase.from('roommate_reports').insert({
           listing_id: reportData.listingId,
-          reporter_id: CURRENT_STUDENT_USER_ID,
+          reporter_id: reporterId,
           reason: reportData.reason,
-          details: reportData.details
+          details: reportData.details,
         });
+        return newReport;
       } catch (err) {
-        console.warn('Supabase report submission failed:', err);
+        console.warn('[Roommate] Supabase report submission failed:', err);
       }
     }
 
-    const current = roommateService.getReports();
-    const updated = [newReport, ...current];
+    // LocalStorage fallback
     try {
+      const stored = localStorage.getItem(STORAGE_KEY_REPORTS);
+      const current: RoommateReport[] = stored ? JSON.parse(stored) : [];
+      const updated = [newReport, ...current];
       localStorage.setItem(STORAGE_KEY_REPORTS, JSON.stringify(updated));
     } catch (err) {
-      console.error('Failed storing report:', err);
+      console.error('[Roommate] Failed storing report:', err);
     }
 
     return newReport;
-  }
+  },
 };
