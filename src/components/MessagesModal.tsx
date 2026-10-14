@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { MessageThread } from '../types';
-import { X, Send, MessageCircle, ShieldCheck } from 'lucide-react';
+import { X, Send, MessageCircle, ShieldCheck, ChevronLeft } from 'lucide-react';
 
 interface MessagesModalProps {
   isOpen: boolean;
@@ -20,6 +20,7 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({
   onSendMessage
 }) => {
   const [inputText, setInputText] = useState('');
+  const [mobileView, setMobileView] = useState<'list' | 'chat'>('chat');
 
   if (!isOpen) return null;
 
@@ -32,43 +33,62 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({
     setInputText('');
   };
 
+  const handleSelectThread = (id: string) => {
+    onSelectThread(id);
+    setMobileView('chat');
+  };
+
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-6 animate-in fade-in duration-150">
       <div 
-        className="relative w-full max-w-3xl h-[600px] max-h-[90vh] bg-white rounded-3xl border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col my-auto"
+        className="relative w-full max-w-3xl h-[600px] max-h-[92vh] bg-white rounded-2xl sm:rounded-3xl border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b-2 border-black bg-slate-50">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#E2F952] border-2 border-black flex items-center justify-center text-black">
-              <MessageCircle className="w-4 h-4" />
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b-2 border-black bg-slate-50">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Mobile back to list button if inside chat */}
+            {mobileView === 'chat' && (
+              <button
+                onClick={() => setMobileView('list')}
+                className="sm:hidden p-1.5 -ml-1 rounded-xl hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                title="Back to all conversations"
+              >
+                <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+              </button>
+            )}
+
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#E2F952] border-2 border-black flex items-center justify-center text-black shrink-0">
+              <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-900 leading-tight">Campus Messages</h3>
-              <p className="text-xs text-slate-500 font-medium">Direct chats with student sellers</p>
+              <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">Campus Messages</h3>
+              <p className="text-[11px] sm:text-xs text-slate-500 font-medium">Direct chats with student peers</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white hover:bg-slate-100 border-2 border-black flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white hover:bg-slate-100 border-2 border-black flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
 
         {/* Content Body */}
         <div className="flex-1 flex overflow-hidden">
           
-          {/* Threads Sidebar */}
-          <div className="w-1/3 border-r-2 border-black overflow-y-auto bg-slate-50/50 hidden sm:block">
+          {/* Threads Sidebar (Full width on mobile when mobileView is 'list', 1/3 on desktop) */}
+          <div className={`w-full sm:w-1/3 border-r-0 sm:border-r-2 border-black overflow-y-auto bg-slate-50/50 ${mobileView === 'chat' ? 'hidden sm:block' : 'block'}`}>
+            <div className="p-3 border-b border-slate-200 bg-white sm:hidden">
+              <span className="text-xs font-black uppercase text-slate-500">All Conversations ({threads.length})</span>
+            </div>
             {threads.map((thread) => {
               const isSelected = thread.id === currentThread?.id;
               return (
                 <button
                   key={thread.id}
-                  onClick={() => onSelectThread(thread.id)}
+                  onClick={() => handleSelectThread(thread.id)}
                   className={`w-full p-3.5 text-left border-b border-slate-200 transition-colors flex items-start gap-3 cursor-pointer ${
                     isSelected ? 'bg-[#E2F952]/40 font-bold' : 'hover:bg-slate-100'
                   }`}
@@ -94,11 +114,11 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({
           </div>
 
           {/* Active Chat Conversation Area */}
-          <div className="flex-1 flex flex-col bg-white">
+          <div className={`flex-1 flex flex-col bg-white ${mobileView === 'list' ? 'hidden sm:flex' : 'flex'}`}>
             {currentThread ? (
               <>
                 {/* Active thread header */}
-                <div className="px-5 py-3 border-b border-slate-200 bg-white flex items-center justify-between">
+                <div className="px-4 sm:px-5 py-2.5 sm:py-3 border-b border-slate-200 bg-white flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <img
                       src={currentThread.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80'}
@@ -110,7 +130,7 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({
                         {currentThread.sellerName}
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                       </div>
-                      <div className="text-[11px] text-slate-500">
+                      <div className="text-[11px] text-slate-500 truncate max-w-[200px] sm:max-w-none">
                         {currentThread.productTitle ? `Item: ${currentThread.productTitle}` : 'Verified Student'}
                       </div>
                     </div>
@@ -118,7 +138,7 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({
                 </div>
 
                 {/* Messages stream */}
-                <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#FCFBF7]">
+                <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3 bg-[#FCFBF7]">
                   {currentThread.messages.map((msg) => {
                     const isUser = msg.sender === 'user';
                     return (
@@ -127,7 +147,7 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({
                         className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
                       >
                         <div
-                          className={`max-w-[78%] px-4 py-2.5 rounded-2xl text-xs sm:text-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
+                          className={`max-w-[85%] sm:max-w-[78%] px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
                             isUser
                               ? 'bg-[#E2F952] text-black rounded-tr-xs'
                               : 'bg-white text-slate-900 rounded-tl-xs'
@@ -143,32 +163,36 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({
                   })}
                 </div>
 
-                {/* Input form */}
-                <form onSubmit={handleSend} className="p-3 border-t-2 border-black bg-white flex items-center gap-2">
+                {/* Message input */}
+                <form
+                  onSubmit={handleSend}
+                  className="p-3 border-t-2 border-black bg-white flex items-center gap-2"
+                >
                   <input
                     type="text"
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder="Type a message for campus pickup..."
-                    className="flex-1 px-4 py-2.5 rounded-xl border-2 border-black text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-slate-50"
+                    className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border-2 border-slate-200 focus:border-black text-xs sm:text-sm font-medium text-slate-900 bg-slate-50 focus:bg-white focus:outline-none transition-all"
                   />
                   <button
                     type="submit"
-                    className="p-2.5 rounded-xl bg-black text-white hover:bg-slate-800 transition-colors cursor-pointer"
-                    title="Send message"
+                    disabled={!inputText.trim()}
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-black hover:bg-slate-800 disabled:opacity-40 text-white flex items-center justify-center shrink-0 cursor-pointer shadow-xs transition-all"
                   >
                     <Send className="w-4 h-4" />
                   </button>
                 </form>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center p-8 text-center text-slate-400 text-sm">
-                Select a conversation on the left to start chatting.
+              <div className="flex-1 flex items-center justify-center p-6 text-center text-slate-400">
+                Select a conversation to start chatting
               </div>
             )}
           </div>
 
         </div>
+
       </div>
     </div>
   );

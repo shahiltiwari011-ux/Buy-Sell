@@ -329,7 +329,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col font-sans text-slate-900 selection:bg-[#E2F952] selection:text-black">
+    <div className="min-h-screen bg-white flex flex-col font-sans text-slate-900 selection:bg-[#E2F952] selection:text-black pb-20 md:pb-0">
       
       {/* 1. Header / Navbar */}
       <Navbar

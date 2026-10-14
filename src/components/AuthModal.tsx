@@ -111,30 +111,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-6">
       <div
-        className="relative w-full max-w-md bg-white rounded-3xl border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden my-auto"
+        className="relative w-full max-w-md max-h-[92vh] flex flex-col bg-white rounded-2xl sm:rounded-3xl border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white hover:bg-slate-100 border-2 border-black flex items-center justify-center text-slate-800 transition-colors cursor-pointer"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 w-8 h-8 rounded-full bg-white hover:bg-slate-100 border-2 border-black flex items-center justify-center text-slate-800 transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Header */}
-        <div className="px-6 pt-7 pb-5 bg-[#FCFBF7] border-b-2 border-black">
+        <div className="px-5 sm:px-6 pt-6 sm:pt-7 pb-4 sm:pb-5 bg-[#FCFBF7] border-b-2 border-black">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-2xl bg-[#E2F952] border-2 border-black flex items-center justify-center text-black">
-              {view === 'sign-in' ? <LogIn className="w-5 h-5" /> :
-               view === 'sign-up' ? <UserPlus className="w-5 h-5" /> :
-               <KeyRound className="w-5 h-5" />}
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#E2F952] border-2 border-black flex items-center justify-center text-black shrink-0">
+              {view === 'sign-in' ? <LogIn className="w-4 h-4 sm:w-5 sm:h-5" /> :
+               view === 'sign-up' ? <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" /> :
+               <KeyRound className="w-4 h-4 sm:w-5 sm:h-5" />}
             </div>
             <div>
-              <h3 className="text-xl font-black text-slate-900 tracking-tight">{titles[view]}</h3>
-              <p className="text-xs text-slate-500 font-medium">{subtitles[view]}</p>
+              <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">{titles[view]}</h3>
+              <p className="text-[11px] sm:text-xs text-slate-500 font-medium">{subtitles[view]}</p>
             </div>
           </div>
         </div>

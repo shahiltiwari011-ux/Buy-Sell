@@ -21,16 +21,16 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   };
 
   return (
-    <div className="bg-white pt-8 pb-12 sm:pt-12 sm:pb-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+    <div className="bg-white pt-6 pb-8 sm:pt-12 sm:pb-16 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
         
         {/* Left Column: Headline, subline, search bar */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-7 space-y-4 sm:space-y-6">
           
           {/* Main Title */}
-          <h1 className="text-5xl sm:text-7xl lg:text-[76px] font-black tracking-tight leading-[1.04] text-slate-900">
+          <h1 className="text-4xl sm:text-6xl lg:text-[76px] font-black tracking-tight leading-[1.05] text-slate-900">
             new semester.<br />
-            <span className="relative inline-block bg-[#E2F952] px-3 py-0.5 rounded-sm mr-2 text-black">
+            <span className="relative inline-block bg-[#E2F952] px-2.5 sm:px-3 py-0.5 rounded-sm mr-2 text-black">
               new-to-you
             </span>
             stuff.
@@ -96,7 +96,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
         {/* Right Column: Neo-brutalist collage with checkered grid and stickers */}
         <div className="lg:col-span-5 flex justify-center lg:justify-end">
-          <div className="relative w-72 h-72 sm:w-96 sm:h-96">
+          <div className="relative w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96">
             
             {/* Checkered Mint Backdrop */}
             <div 

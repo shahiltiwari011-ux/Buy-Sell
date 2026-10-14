@@ -375,7 +375,7 @@ export const RoommateFinderSection: React.FC<RoommateFinderSectionProps> = ({
       </div>
 
       {/* 2. Navigation Tabs (Requirement 3: Find a Roommate, Find a Room, Post Availability) */}
-      <div className="flex items-center gap-2 sm:gap-3 border-b-2 border-slate-200 pb-4 mb-6 overflow-x-auto">
+      <div className="flex items-center gap-2 sm:gap-3 border-b-2 border-slate-200 pb-4 mb-6 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <button
           id="tab-find-roommate"
           onClick={() => {

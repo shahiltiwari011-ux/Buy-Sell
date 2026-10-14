@@ -60,25 +60,25 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-6 animate-in fade-in duration-150">
       <div 
-        className="relative w-full max-w-3xl bg-white rounded-3xl border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden my-auto"
+        className="relative w-full max-w-3xl max-h-[92vh] flex flex-col bg-white rounded-2xl sm:rounded-3xl border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Floating close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-white hover:bg-slate-100 border-2 border-black flex items-center justify-center text-slate-800 transition-colors cursor-pointer"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-slate-100 border-2 border-black flex items-center justify-center text-slate-800 transition-colors cursor-pointer"
           title="Close"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
-        <div className="grid grid-cols-1 md:grid-cols-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 overflow-y-auto">
           
           {/* Left Column: Image with pastel background */}
           <div 
-            className="relative flex items-center justify-center p-8 min-h-[320px] md:min-h-[460px] border-b-2 md:border-b-0 md:border-r-2 border-black"
+            className="relative flex items-center justify-center p-4 sm:p-8 min-h-[200px] sm:min-h-[280px] md:min-h-[460px] max-h-[250px] md:max-h-none border-b-2 md:border-b-0 md:border-r-2 border-black shrink-0"
             style={{ backgroundColor: product.imageBgColor || '#F1F5F9' }}
           >
             <img

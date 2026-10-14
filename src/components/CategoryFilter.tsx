@@ -36,7 +36,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto pb-2 scrollbar-none py-1">
+    <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2 py-1 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       {categories.map((cat) => {
         const isSelected = selectedCategory === cat;
         return (
