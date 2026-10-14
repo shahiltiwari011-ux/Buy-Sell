@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../services/authService';
 import { X, Mail, Lock, User, GraduationCap, Eye, EyeOff, AlertCircle, CheckCircle2, LogIn, UserPlus, KeyRound } from 'lucide-react';
 
@@ -7,11 +7,18 @@ type AuthView = 'sign-in' | 'sign-up' | 'forgot-password';
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialView?: AuthView;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialView = 'sign-in' }) => {
   const { signIn, signUp, resetPassword } = useAuth();
-  const [view, setView] = useState<AuthView>('sign-in');
+  const [view, setView] = useState<AuthView>(initialView);
+
+  useEffect(() => {
+    if (isOpen) {
+      setView(initialView);
+    }
+  }, [isOpen, initialView]);
 
   // Form fields
   const [email, setEmail] = useState('');
